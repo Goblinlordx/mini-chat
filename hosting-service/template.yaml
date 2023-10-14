@@ -124,7 +124,7 @@ Resources:
             Resource: [!GetAtt Bucket.Arn]
           - Effect: Allow
             Action: ["cloudfront:*"]
-            Resource: [!GetAtt Distribution.Arn]
+            Resource: ["*"]
           
 
 Outputs:
