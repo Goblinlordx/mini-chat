@@ -45,9 +45,15 @@ Resources:
         AcmCertificateArn: !Ref AcmCertificateArn
 
 Outputs:
+  BucketRegion:
+    Description: "Bucket region"
+    Value: AWS::Region
   BucketName:
     Description: "Bucket name"
     Value: !GetAtt HostingService.Outputs.BucketName
+  DistributionId:
+    Description: "CloudFront Distribution Id"
+    Value: !GetAtt HostingService.Outputs.DistributionId
   DistributionURL:
     Description: "Distribution URL"
     Value: !Sub

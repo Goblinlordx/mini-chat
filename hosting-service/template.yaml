@@ -113,6 +113,9 @@ Outputs:
   BucketName:
     Description: "Bucket name"
     Value: !Ref Bucket
+  DistributionId:
+    Description: "CloudFront distribution Id"
+    Value: !GetAtt Distribution.Id
   DistributionURL:
     Description: "Distribution URL"
     Value: !Ref DomainName
