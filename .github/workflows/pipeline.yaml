@@ -156,10 +156,9 @@ jobs:
         role-skip-session-tagging: true
     - name: Get bucket name from output
       run: echo "bucket_name=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
-    - run: aws cloudformation describe-stacks --region ap-northeast-2 --stack-name mini-chat --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" --no-paginate --output text
-    - run: aws cloudformation describe-stacks --region ap-northeast-2 --stack-name mini-chat --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" --no-paginate --output text
     - name: Get cloudformation distribution id from output
       run: echo "cfn_id=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
+    - run: echo "${{ steps.vars.outputs.bucket_name }} - ${{ steps.vars.outputs.cfn_id }}"
     - name: Deploy
       uses: reggionick/s3-deploy@v4
       with:
