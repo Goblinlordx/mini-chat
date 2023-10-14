@@ -155,13 +155,13 @@ jobs:
         role-duration-seconds: 3600
         role-skip-session-tagging: true
     - name: Get outputs from the stack just created
-      run: echo "bucket_name=$(aws cloudformation \
-          --region ${{ env.PROD_REGION }} describe-stacks \
+      run: echo "bucket_name=$(aws cloudformation describe-stacks \
+          --region ${{ env.PROD_REGION }} \
           --stack-name ${{ env.PROD_STACK_NAME }} \
           --query "Stacks[0].Outputs[0].OutputValue")" >> $GITHUB_OUTPUT
     - id: get-output-2
-      run: echo "cfn_id=$(aws cloudformation \
-          --region ${{ env.PROD_REGION }} describe-stacks \
+      run: echo "cfn_id=$(aws cloudformation describe-stacks \
+          --region ${{ env.PROD_REGION }} \
           --stack-name ${{ env.PROD_STACK_NAME }} \
           --query "Stacks[0].Outputs[0].OutputValue")" >> $GITHUB_OUTPUT
     - run: echo "${{ steps.vars.outputs.bucket_name }}"
