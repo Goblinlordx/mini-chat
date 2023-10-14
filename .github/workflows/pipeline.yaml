@@ -107,8 +107,8 @@ jobs:
     # https://docs.github.com/en/actions/reference/environments
     # environment: <configured-environment>
     outputs:
-      bucket_name: ${{ steps.step1.outputs.bucket_name }}
-      cfn_id: ${{ steps.step2.outputs.cfn_id }}
+      bucket_name: ${{ steps.get-bucket-name.outputs.bucket_name }}
+      cfn_id: ${{ steps.get-cfn-id.outputs.cfn_id }}
     steps:
     - uses: actions/checkout@v3
     - uses: aws-actions/setup-sam@v2
