@@ -11,7 +11,7 @@ env:
   # uncomment the line below and add "--image-repository ${TESTING_IMAGE_REPOSITORY}" to
   # testing "sam package" and "sam deploy" commands.
   # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
-  TESTING_REGION: ap-northeast-2
+  # TESTING_REGION: ap-northeast-2
   PROD_STACK_NAME: mini-chat
   PROD_PIPELINE_EXECUTION_ROLE_NAME: aws-sam-cli-managed-prod-pip-PipelineExecutionRole-1LTTYHMVZI4M4
   PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::837930595040:role/aws-sam-cli-managed-prod-pip-PipelineExecutionRole-1LTTYHMVZI4M4
@@ -158,7 +158,7 @@ jobs:
       run: >-
         echo "::set-output name=BUCKET_NAME::$(
           aws cloudformation \
-          --region us-west-2 describe-stacks \
+          --region ${{ env.PROD_REGION }} describe-stacks \
           --stack-name ${{ env.PROD_STACK_NAME }} \
           --query "Stacks[0].Outputs[0].OutputValue"
         )"
@@ -166,7 +166,7 @@ jobs:
       run: >-
         echo "::set-output name=CFN_ID::$(
           aws cloudformation \
-          --region us-west-2 describe-stacks \
+          --region ${{ env.PROD_REGION }} describe-stacks \
           --stack-name ${{ env.PROD_STACK_NAME }} \
           --query "Stacks[0].Outputs[1].OutputValue"
         )"
@@ -174,9 +174,9 @@ jobs:
       uses: reggionick/s3-deploy@v4
       with:
         folder: web-client/build
-        bucket: ${{ steps.get-outputs-1.BUCKET_NAME }}
+        bucket: ${{ steps.get-output-1.BUCKET_NAME }}
         bucket-region: ${{ env.PROD_REGION }}
-        dist-id: ${{ steps.get-outputs-2.CFN_ID }}
+        dist-id: ${{ steps.get-output-2.CFN_ID }}
         invalidation: /
         delete-removed: true
         no-cache: true
