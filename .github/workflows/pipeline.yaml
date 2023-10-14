@@ -162,9 +162,9 @@ jobs:
       uses: reggionick/s3-deploy@v4
       with:
         folder: web-client/build
-        bucket: $BUCKET_NAME
+        bucket: ${{ env.BUCKET_NAME }}
         bucket-region: ${{ env.PROD_REGION }}
-        dist-id: $CFN_ID
+        dist-id: ${{ env.CFN_ID }}
         invalidation: /
         delete-removed: true
         no-cache: true
