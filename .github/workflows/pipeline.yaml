@@ -62,7 +62,10 @@ jobs:
     - uses: actions/upload-artifact@v3
       with:
         name: client
-        path: web-client/build
+        path:
+        - web-client/build/**/**/*
+        - web-client/build/**/*
+        - web-client/build/*
 
 
   build-and-package-infra:
