@@ -155,6 +155,9 @@ jobs:
       uses: actions/download-artifact@v3
       with:
         name: client
+        path: web-client/build
+    - name: List files
+      run: ls web-client/**/*
     - name: Assume the prod pipeline user role
       uses: aws-actions/configure-aws-credentials@v1-node16
       with:
