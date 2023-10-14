@@ -22,6 +22,9 @@ Parameters:
   AcmCertificateArn:
     Type: String
     Description: "ACM Certificate ARN for hosted zone domain"
+  PipelineExecutionRole:
+    Type: AWS::IAM::Role
+    Description: "Pipeline execution role name"
 
 Resources:
   AuthNService:
@@ -43,6 +46,7 @@ Resources:
         DomainName: !Ref DomainName
         HostedZoneId: !Ref HostedZoneId
         AcmCertificateArn: !Ref AcmCertificateArn
+        PipelineExecutionRoleName: !Ref PipelineExecutionRole
 
 Outputs:
   BucketRegion:
