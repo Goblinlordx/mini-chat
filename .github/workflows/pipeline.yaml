@@ -155,29 +155,24 @@ jobs:
         role-duration-seconds: 3600
         role-skip-session-tagging: true
     - name: Get outputs from the stack just created
-      id: get-output-1
-      run: >-
-        echo "::set-output name=BUCKET_NAME::$(
-          aws cloudformation \
+      run: echo "bucket_name=$(aws cloudformation \
           --region ${{ env.PROD_REGION }} describe-stacks \
           --stack-name ${{ env.PROD_STACK_NAME }} \
-          --query "Stacks[0].Outputs[0].OutputValue"
-        )"
+          --query "Stacks[0].Outputs[0].OutputValue")" >> $GITHUB_OUTPUT
     - id: get-output-2
-      run: >-
-        echo "::set-output name=CFN_ID::$(
-          aws cloudformation \
+      run: echo "cfn_id=$(aws cloudformation \
           --region ${{ env.PROD_REGION }} describe-stacks \
           --stack-name ${{ env.PROD_STACK_NAME }} \
-          --query "Stacks[0].Outputs[1].OutputValue"
-        )"
+          --query "Stacks[0].Outputs[0].OutputValue")" >> $GITHUB_OUTPUT
+    - run: echo "${{ steps.vars.outputs.bucket_name }}"
+    - run: echo "${{ steps.vars.outputs.cfn_id }}"
     - name: Deploy
       uses: reggionick/s3-deploy@v4
       with:
         folder: web-client/build
-        bucket: ${{ steps.get-output-1.BUCKET_NAME }}
+        bucket: ${{ steps.vars.outputs.bucket_name }}
         bucket-region: ${{ env.PROD_REGION }}
-        dist-id: ${{ steps.get-output-2.CFN_ID }}
+        dist-id: ${{ steps.vars.outputs.cfn_id }}
         invalidation: /
         delete-removed: true
         no-cache: true

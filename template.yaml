@@ -47,7 +47,6 @@ Resources:
         HostedZoneId: !Ref HostedZoneId
         AcmCertificateArn: !Ref AcmCertificateArn
         PipelineExecutionRole: !Ref PipelineExecutionRole
-        RootStackName: AWS::StackName
 
 Outputs:
   BucketName:
