@@ -154,28 +154,29 @@ jobs:
         role-duration-seconds: 3600
         role-skip-session-tagging: true
     - name: Get outputs from the stack just created
-      id: get-outputs
+      id: get-output-1
       run: >-
         echo "::set-output name=BUCKET_NAME::$(
           aws cloudformation \
           --region us-west-2 describe-stacks \
-          --stack-name ${{ PROD_STACK_NAME }} \
+          --stack-name ${{ env.PROD_STACK_NAME }} \
           --query "Stacks[0].Outputs[0].OutputValue"
         )"
+    - id: get-output-2
       run: >-
         echo "::set-output name=CFN_ID::$(
           aws cloudformation \
           --region us-west-2 describe-stacks \
-          --stack-name ${{ PROD_STACK_NAME }} \
+          --stack-name ${{ env.PROD_STACK_NAME }} \
           --query "Stacks[0].Outputs[1].OutputValue"
         )"
     - name: Deploy
       uses: reggionick/s3-deploy@v4
       with:
         folder: web-client/build
-        bucket: ${{ steps.get-outputs.BUCKET_NAME }}
+        bucket: ${{ steps.get-outputs-1.BUCKET_NAME }}
         bucket-region: ${{ env.PROD_REGION }}
-        dist-id: ${{ steps.get-outputs.CFN_ID }}
+        dist-id: ${{ steps.get-outputs-2.CFN_ID }}
         invalidation: /
         delete-removed: true
         no-cache: true
