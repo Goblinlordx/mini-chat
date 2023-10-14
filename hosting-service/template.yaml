@@ -118,7 +118,7 @@ Resources:
   PipelineDeployementRolePolicy:
     Type: AWS::IAM::Policy
     Properties:
-      Version": "2012-10-17"
+      Version: "2012-10-17"
       PolicyName: !Sub ${AWS::StackName}-deploy
       Roles: [!Ref PipelineExecutionRole]
       PolicyDocument:
