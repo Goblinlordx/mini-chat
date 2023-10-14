@@ -44,25 +44,6 @@ jobs:
       - run: |
           # trigger the tests here
 
-  build-client:
-    needs: [test]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - working-directory: ./web-client
-      run: npm ci
-    - working-directory: ./web-client
-      run: npm run build
-    - working-directory: ./web-client
-      run: npm test
-    - uses: actions/upload-artifact@v3
-      with:
-        name: client
-        path: web-client/build/*
 
 
   build-and-package-infra:
@@ -109,6 +90,8 @@ jobs:
     outputs:
       bucket_name: ${{ steps.get-bucket-name.outputs.bucket_name }}
       cfn_id: ${{ steps.get-cfn-id.outputs.cfn_id }}
+      auth_url: ${{ steps.get-auth-url.outputs.auth_url }}
+      auth_client_id: ${{ steps.get-auth-client-id.outputs.auth_client_id }}
     steps:
     - uses: actions/checkout@v3
     - uses: aws-actions/setup-sam@v2
@@ -144,7 +127,35 @@ jobs:
     - id: get-cfn-id
       name: Get cloudformation distribution id from output
       run: echo "cfn_id=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
+    - id: get-auth-url
+      name: Get cloudformation distribution id from output
+      run: echo "auth_url=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='AuthUrl'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
+    - id: get-auth-client-id
+      name: Get cloudformation distribution id from output
+      run: echo "auth_client_id=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='AuthClientId'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
 
+  build-client:
+    needs: [deploy-prod-infra]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - working-directory: ./web-client
+      run: npm ci
+    - working-directory: ./web-client
+      env:
+        REACT_APP_AUTH_URL: ${{ needs.deploy-prod-infra.outputs.auth_url }}
+        REACT_APP_AUTH_CLIENT_ID: ${{ needs.deploy-prod-infra.outputs.auth_client_id }}
+      run: npm run build
+    - working-directory: ./web-client
+      run: npm test
+    - uses: actions/upload-artifact@v3
+      with:
+        name: client
+        path: web-client/build/*
 
   deploy-client:
     if: github.ref == 'refs/heads/master'

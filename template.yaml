@@ -60,3 +60,9 @@ Outputs:
     Value: !Sub
     - https://${domain}/
     - domain: !GetAtt HostingService.Outputs.DistributionURL
+  AuthClientId:
+    Description: "Auth client Id"
+    Value: !GetAtt AuthNService.Outputs.UserPoolClientId
+  AuthUrl:
+    Description: "Login URL"
+    Value: !GetAtt AuthNService.Outputs.AuthUrl

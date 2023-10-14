@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react"
 
+const AUTH_URL = process.env.REACT_APP_AUTH_URL
+const CLIENT_ID = process.env.REACT_APP_AUTH_CLIENT_ID
+const RESPONSE_TYPE = "token"
+const { protocol, hostname, port } = window.location
+const REDIRECT_URI = `${protocol}//${hostname}${port ? ":" + port : ""}`
+export const LOGIN_URL = `${AUTH_URL}?client_id=${CLIENT_ID}&response_type=${RESPONSE_TYPE}&redirect_uri=${REDIRECT_URI}`
+
 export const STORAGE_KEY = "authn_data"
 
 const checkAuthn = () => {
