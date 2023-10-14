@@ -47,23 +47,21 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - working-directory: ./web-client
-        run: npm ci
-      - working-directory: ./web-client
-        run: npm run build
-      - working-directory: ./web-client
-        run: npm test
-      - working-directory: ./web-client
-        name: Archive production client artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: client
-          path: build
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - working-directory: ./web-client
+      run: npm ci
+    - working-directory: ./web-client
+      run: npm run build
+    - working-directory: ./web-client
+      run: npm test
+    - uses: actions/upload-artifact@v3
+      with:
+        name: client
+        path: web-client/build
 
 
   build-and-package-infra:
@@ -71,34 +69,34 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
+    - uses: actions/checkout@v3
+    - uses: aws-actions/setup-sam@v2
+      with:
+        use-installer: true
 
-      - name: Build resources
-        run: sam build --template ${SAM_TEMPLATE} --use-container
+    - name: Build resources
+      run: sam build --template ${SAM_TEMPLATE} --use-container
 
-      - name: Assume the prod pipeline user role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          aws-region: ${{ env.PROD_REGION }}
-          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: prod-packaging
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
+    - name: Assume the prod pipeline user role
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        aws-region: ${{ env.PROD_REGION }}
+        role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+        role-session-name: prod-packaging
+        role-duration-seconds: 3600
+        role-skip-session-tagging: true
 
-      - name: Upload artifacts to production artifact buckets
-        run: |
-          sam package \
-            --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
-            --region ${PROD_REGION} \
-            --output-template-file packaged-prod.yaml
+    - name: Upload artifacts to production artifact buckets
+      run: |
+        sam package \
+          --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+          --region ${PROD_REGION} \
+          --output-template-file packaged-prod.yaml
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: packaged-prod.yaml
-          path: packaged-prod.yaml
+    - uses: actions/upload-artifact@v3
+      with:
+        name: packaged-prod.yaml
+        path: packaged-prod.yaml
 
   deploy-prod-infra:
     if: github.ref == 'refs/heads/master'
@@ -108,34 +106,34 @@ jobs:
     # https://docs.github.com/en/actions/reference/environments
     # environment: <configured-environment>
     steps:
-      - uses: actions/checkout@v3
-      - uses: aws-actions/setup-sam@v2
-        with:
-          use-installer: true
-      - uses: actions/download-artifact@v3
-        with:
-          name: packaged-prod.yaml
+    - uses: actions/checkout@v3
+    - uses: aws-actions/setup-sam@v2
+      with:
+        use-installer: true
+    - uses: actions/download-artifact@v3
+      with:
+        name: packaged-prod.yaml
 
-      - name: Assume the prod pipeline user role
-        uses: aws-actions/configure-aws-credentials@v1-node16
-        with:
-          aws-region: ${{ env.PROD_REGION }}
-          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
-          role-session-name: prod-deployment
-          role-duration-seconds: 3600
-          role-skip-session-tagging: true
+    - name: Assume the prod pipeline user role
+      uses: aws-actions/configure-aws-credentials@v1-node16
+      with:
+        aws-region: ${{ env.PROD_REGION }}
+        role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+        role-session-name: prod-deployment
+        role-duration-seconds: 3600
+        role-skip-session-tagging: true
 
-      - name: Deploy to infra to production account
-        run: |
-          sam deploy --stack-name ${PROD_STACK_NAME} \
-            --template packaged-prod.yaml \
-            --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
-            --region ${PROD_REGION} \
-            --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
-            --no-fail-on-empty-changeset \
-            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
-            --tags AppManagerCFNStackKey=${PROD_STACK_NAME} \
-            --parameter-overrides "PipelineExecutionRole=\"${PROD_PIPELINE_EXECUTION_ROLE}\" UserPoolDomainPrefix=\"${{ vars.USER_POOL_DOMAIN_PREFIX }}\" GoogleClientId=\"${GOOGLE_OAUTH_CLIENT_ID}\" GoogleClientSecret=\"${GOOGLE_OAUTH_CLIENT_SECRET}\" DomainName=\"${{ vars.DOMAIN_NAME }}\" HostedZoneId=\"${{ vars.HOSTED_ZONE_ID }}\" AcmCertificateArn=\"${{ vars.ACM_CERTIFICATE_ARN }}\""
+    - name: Deploy to infra to production account
+      run: |
+        sam deploy --stack-name ${PROD_STACK_NAME} \
+          --template packaged-prod.yaml \
+          --capabilities CAPABILITY_IAM CAPABILITY_AUTO_EXPAND \
+          --region ${PROD_REGION} \
+          --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+          --no-fail-on-empty-changeset \
+          --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
+          --tags AppManagerCFNStackKey=${PROD_STACK_NAME} \
+          --parameter-overrides "PipelineExecutionRole=\"${PROD_PIPELINE_EXECUTION_ROLE}\" UserPoolDomainPrefix=\"${{ vars.USER_POOL_DOMAIN_PREFIX }}\" GoogleClientId=\"${GOOGLE_OAUTH_CLIENT_ID}\" GoogleClientSecret=\"${GOOGLE_OAUTH_CLIENT_SECRET}\" DomainName=\"${{ vars.DOMAIN_NAME }}\" HostedZoneId=\"${{ vars.HOSTED_ZONE_ID }}\" AcmCertificateArn=\"${{ vars.ACM_CERTIFICATE_ARN }}\""
 
   deploy-client:
     if: github.ref == 'refs/heads/master'
@@ -157,7 +155,7 @@ jobs:
     - name: Deploy
       uses: reggionick/s3-deploy@v4
       with:
-        folder: build
+        folder: web-client/build
         bucket: ${{ secrets.S3_BUCKET }}
         bucket-region: ${{ env.PROD_REGION }}
         dist-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
