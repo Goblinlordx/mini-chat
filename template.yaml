@@ -49,9 +49,6 @@ Resources:
         PipelineExecutionRole: !Ref PipelineExecutionRole
 
 Outputs:
-  BucketRegion:
-    Description: "Bucket region"
-    Value: AWS::Region
   BucketName:
     Description: "Bucket name"
     Value: !GetAtt HostingService.Outputs.BucketName

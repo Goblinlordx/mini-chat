@@ -13,6 +13,7 @@ env:
   # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
   TESTING_REGION: ap-northeast-2
   PROD_STACK_NAME: mini-chat
+  PROD_PIPELINE_EXECUTION_ROLE_NAME: aws-sam-cli-managed-prod-pip-PipelineExecutionRole-1LTTYHMVZI4M4
   PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::837930595040:role/aws-sam-cli-managed-prod-pip-PipelineExecutionRole-1LTTYHMVZI4M4
   PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::837930595040:role/aws-sam-cli-managed-prod-CloudFormationExecutionR-9YG8ONUENJFL
   PROD_ARTIFACTS_BUCKET: aws-sam-cli-managed-prod-pipeline-artifactsbucket-35pn8ccuzky7
@@ -133,7 +134,7 @@ jobs:
           --no-fail-on-empty-changeset \
           --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
           --tags AppManagerCFNStackKey=${PROD_STACK_NAME} \
-          --parameter-overrides "PipelineExecutionRole=\"${PROD_PIPELINE_EXECUTION_ROLE}\" UserPoolDomainPrefix=\"${{ vars.USER_POOL_DOMAIN_PREFIX }}\" GoogleClientId=\"${GOOGLE_OAUTH_CLIENT_ID}\" GoogleClientSecret=\"${GOOGLE_OAUTH_CLIENT_SECRET}\" DomainName=\"${{ vars.DOMAIN_NAME }}\" HostedZoneId=\"${{ vars.HOSTED_ZONE_ID }}\" AcmCertificateArn=\"${{ vars.ACM_CERTIFICATE_ARN }}\""
+          --parameter-overrides "PipelineExecutionRole=\"${PROD_PIPELINE_EXECUTION_ROLE_NAME}\" UserPoolDomainPrefix=\"${{ vars.USER_POOL_DOMAIN_PREFIX }}\" GoogleClientId=\"${GOOGLE_OAUTH_CLIENT_ID}\" GoogleClientSecret=\"${GOOGLE_OAUTH_CLIENT_SECRET}\" DomainName=\"${{ vars.DOMAIN_NAME }}\" HostedZoneId=\"${{ vars.HOSTED_ZONE_ID }}\" AcmCertificateArn=\"${{ vars.ACM_CERTIFICATE_ARN }}\""
 
   deploy-client:
     if: github.ref == 'refs/heads/master'
@@ -152,13 +153,29 @@ jobs:
         role-session-name: prod-deployment
         role-duration-seconds: 3600
         role-skip-session-tagging: true
+    - name: Get outputs from the stack just created
+      id: get-outputs
+      run: >-
+        echo "::set-output name=BUCKET_NAME::$(
+          aws cloudformation \
+          --region us-west-2 describe-stacks \
+          --stack-name ${{ PROD_STACK_NAME }} \
+          --query "Stacks[0].Outputs[0].OutputValue"
+        )"
+      run: >-
+        echo "::set-output name=CFN_ID::$(
+          aws cloudformation \
+          --region us-west-2 describe-stacks \
+          --stack-name ${{ PROD_STACK_NAME }} \
+          --query "Stacks[0].Outputs[1].OutputValue"
+        )"
     - name: Deploy
       uses: reggionick/s3-deploy@v4
       with:
         folder: web-client/build
-        bucket: ${{ secrets.S3_BUCKET }}
+        bucket: ${{ steps.get-outputs.BUCKET_NAME }}
         bucket-region: ${{ env.PROD_REGION }}
-        dist-id: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
+        dist-id: ${{ steps.get-outputs.CFN_ID }}
         invalidation: /
         delete-removed: true
         no-cache: true
