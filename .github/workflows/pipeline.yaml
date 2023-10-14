@@ -155,17 +155,16 @@ jobs:
         role-duration-seconds: 3600
         role-skip-session-tagging: true
     - name: Get bucket name from output
-      run: echo "bucket_name=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
+      run: export BUCKET_NAME=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='BucketName'].OutputValue" --no-paginate --output text)
     - name: Get cloudformation distribution id from output
-      run: echo "cfn_id=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
-    - run: echo "${{ steps.vars.outputs.bucket_name }} - ${{ steps.vars.outputs.cfn_id }}"
+      run: export CFN_ID=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" --no-paginate --output text)
     - name: Deploy
       uses: reggionick/s3-deploy@v4
       with:
         folder: web-client/build
-        bucket: ${{ steps.vars.outputs.bucket_name }}
+        bucket: $BUCKET_NAME
         bucket-region: ${{ env.PROD_REGION }}
-        dist-id: ${{ steps.vars.outputs.cfn_id }}
+        dist-id: $CFN_ID
         invalidation: /
         delete-removed: true
         no-cache: true
