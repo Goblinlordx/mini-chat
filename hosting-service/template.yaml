@@ -36,8 +36,8 @@ Parameters:
     - PriceClass_200
     - PriceClass_All
   PipelineExecutionRole:
-    Type: AWS::IAM::Role
-    Description: "Pipeline execution role name"
+    Type: String
+    Description: "Pipeline execution role ARN"
 
 Conditions:
   IsStaticMode: !Equals [!Ref RewriteMode, "STATIC"]
@@ -119,12 +119,12 @@ Resources:
         Roles: [!Ref PipelineExecutionRole]
         PolicyDocument:
           Statement:
-            - Effect: Allow
-              Action: ["s3:*"]
-              Resource: [!GetAtt Bucket.Arn]
-            - Effect: Allow
-              Action: ["cloudfront:*"]
-              Resource: [!GetAtt Distribution.Arn]
+          - Effect: Allow
+            Action: ["s3:*"]
+            Resource: [!GetAtt Bucket.Arn]
+          - Effect: Allow
+            Action: ["cloudfront:*"]
+            Resource: [!GetAtt Distribution.Arn]
           
 
 Outputs:
