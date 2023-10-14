@@ -112,4 +112,4 @@ jobs:
             --no-fail-on-empty-changeset \
             --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
             --tags AppManagerCFNStackKey=${PROD_STACK_NAME} \
-            --parameter-overrides "UserPoolDomainPrefix=\"$USER_POOL_DOMAIN_PREFIX\" GoogleClientId=\"${GOOGLE_OAUTH_CLIENT_ID}\" GoogleClientSecret=\"${GOOGLE_OAUTH_CLIENT_SECRET}\" DomainName=\"$DOMAIN_NAME\" HostedZoneId=\"$HOSTED_ZONE_ID\" AcmCertificateArn\"$ACM_CERTIFICATE_ARN\""
+            --parameter-overrides "UserPoolDomainPrefix=\"${{ vars.USER_POOL_DOMAIN_PREFIX }}\" GoogleClientId=\"${GOOGLE_OAUTH_CLIENT_ID}\" GoogleClientSecret=\"${GOOGLE_OAUTH_CLIENT_SECRET}\" DomainName=\"${{ vars.DOMAIN_NAME }}\" HostedZoneId=\"${{ vars.HOSTED_ZONE_ID }}\" AcmCertificateArn\"${{ vars.ACM_CERTIFICATE_ARN }}\""
