@@ -43,6 +43,20 @@ jobs:
       - run: |
           # trigger the tests here
 
+  build-client:
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: cd web-client
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+
   build-and-package:
     if: github.ref == 'refs/heads/master'
     needs: [test]
@@ -102,7 +116,7 @@ jobs:
           role-duration-seconds: 3600
           role-skip-session-tagging: true
 
-      - name: Deploy to production account
+      - name: Deploy to infra to production account
         run: |
           sam deploy --stack-name ${PROD_STACK_NAME} \
             --template packaged-prod.yaml \
