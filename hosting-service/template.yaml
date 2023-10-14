@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+
+Parameters:
+  DomainName:
+    Type: String
+    Description: "The domain name of website"
+  HostedZoneId:
+    Type: String
+    Description: "The Route53 hosted zone ID used for the domain"
+  AcmCertificateArn:
+    Type: String
+    Description: "The certificate arn for the domain name provided"
+  IndexDocument:
+    Type: String
+    Description: "The index document"
+    Default: "index.html"
+  ErrorDocument:
+    Type: String
+    Description: "The error document, ignored in SPA mode"
+    Default: "404.html"
+  RewriteMode:
+    Type: String
+    Description: "The request rewrite behaviour type"
+    Default: "SPA"
+    AllowedValues:
+    - STATIC
+    - SPA
+  CloudFrontPriceClass:
+    Type: String
+    Description: "The price class for CloudFront distribution"
+    Default: "PriceClass_100"
+    AllowedValues:
+    - PriceClass_100
+    - PriceClass_200
+    - PriceClass_All
+
+Conditions:
+  IsStaticMode: !Equals [!Ref RewriteMode, "STATIC"]
+  # IsSPAMode: !Equals [!Ref RewriteMode, "SPA"]
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument: 
+        Statement: 
+        - Effect: "Allow"
+          Action: "s3:GetObject"
+          Resource: !Sub "arn:aws:s3:::${Bucket}/*"
+          Principal: 
+            AWS: !Sub 'arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OriginAccessIdentity}'
+
+  OriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Ref AWS::StackName
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: 'true'
+        Comment: !Ref AWS::StackName
+        PriceClass: !Ref CloudFrontPriceClass
+        HttpVersion: http2
+        DefaultRootObject: !Ref IndexDocument
+        Aliases:
+        - !Ref DomainName
+        Origins:
+        - DomainName: !Sub "${Bucket}.s3.${AWS::Region}.amazonaws.com"
+          Id: bucketOrigin
+          S3OriginConfig:
+            OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${OriginAccessIdentity}
+        CustomErrorResponses:
+        - ErrorCachingMinTTL: 86400
+          ErrorCode: 403 # object not found in bucket
+          ResponseCode: !If [IsStaticMode, 404, 200]
+          ResponsePagePath: !If [IsStaticMode, !Sub "/${ErrorDocument}", !Sub "/${IndexDocument}"]
+        DefaultCacheBehavior:
+          Compress: 'true'
+          AllowedMethods:
+          - GET
+          - HEAD
+          - OPTIONS
+          TargetOriginId: bucketOrigin
+          ForwardedValues:
+            QueryString: 'false'
+            Cookies:
+              Forward: none
+          ViewerProtocolPolicy: redirect-to-https
+        ViewerCertificate:
+          AcmCertificateArn: !Ref AcmCertificateArn
+          SslSupportMethod: sni-only
+
+  DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget:
+        DNSName: !GetAtt Distribution.DomainName
+        HostedZoneId: "Z2FDTNDATAQYW2" # CloudFront
+
+Outputs:
+  BucketName:
+    Description: "Bucket name"
+    Value: !Ref Bucket
+  DistributionURL:
+    Description: "Distribution URL"
+    Value: !Ref DomainName
+    

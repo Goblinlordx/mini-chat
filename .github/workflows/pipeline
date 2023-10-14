@@ -1,0 +1,120 @@
+name: Pipeline
+
+on:
+  push:
+    branches:
+      - 'prod'
+      - 'feature**'
+  delete:
+    branches:
+      - 'feature**'
+
+env:
+  SAM_TEMPLATE: template.yaml
+  # If there are functions with "Image" PackageType in your template,
+  # uncomment the line below and add "--image-repository ${TESTING_IMAGE_REPOSITORY}" to
+  # testing "sam package" and "sam deploy" commands.
+  # TESTING_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
+  TESTING_REGION: ap-northeast-2
+  PROD_STACK_NAME: cgnto-google
+  PROD_PIPELINE_EXECUTION_ROLE: arn:aws:iam::837930595040:role/aws-sam-cli-managed-prod-pip-PipelineExecutionRole-1LTTYHMVZI4M4
+  PROD_CLOUDFORMATION_EXECUTION_ROLE: arn:aws:iam::837930595040:role/aws-sam-cli-managed-prod-CloudFormationExecutionR-9YG8ONUENJFL
+  PROD_ARTIFACTS_BUCKET: aws-sam-cli-managed-prod-pipeline-artifactsbucket-35pn8ccuzky7
+  # If there are functions with "Image" PackageType in your template,
+  # uncomment the line below and add "--image-repository ${PROD_IMAGE_REPOSITORY}" to
+  # prod "sam package" and "sam deploy" commands.
+  # PROD_IMAGE_REPOSITORY = '0123456789.dkr.ecr.region.amazonaws.com/repository-name'
+  PROD_REGION: ap-northeast-2
+  # Custom parameters
+  ## AuthN
+  USER_POOL_DOMAIN_PREFIX: ${{ secrets.USER_POOL_DOMAIN_PREFIX }}
+  CLIENT_DOMAINS: ${{ secrets.CLIENT_DOMAINS }}
+  GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+  GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+  ## Hosting
+  DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
+  HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
+  ACM_CERTIFICATE_ARN: ${{ secrets.ACM_CERTIFICATE_ARN }}
+
+permissions:
+  id-token: write
+  contents: read
+jobs:
+  test:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          # trigger the tests here
+
+  build-and-package:
+    if: github.ref == 'refs/heads/main'
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+
+      - name: Build resources
+        run: sam build --template ${SAM_TEMPLATE} --use-container
+
+      - name: Assume the prod pipeline user role
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: ${{ env.PROD_REGION }}
+          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+          role-session-name: prod-packaging
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Upload artifacts to production artifact buckets
+        run: |
+          sam package \
+            --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+            --region ${PROD_REGION} \
+            --output-template-file packaged-prod.yaml
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: packaged-prod.yaml
+          path: packaged-prod.yaml
+
+  deploy-prod:
+    if: github.ref == 'refs/heads/main'
+    needs: [build-and-package]
+    runs-on: ubuntu-latest
+    # Configure GitHub Action Environment to have a manual approval step before deployment to production
+    # https://docs.github.com/en/actions/reference/environments
+    # environment: <configured-environment>
+    steps:
+      - uses: actions/checkout@v3
+      - uses: aws-actions/setup-sam@v2
+        with:
+          use-installer: true
+      - uses: actions/download-artifact@v3
+        with:
+          name: packaged-prod.yaml
+
+      - name: Assume the prod pipeline user role
+        uses: aws-actions/configure-aws-credentials@v1-node16
+        with:
+          aws-region: ${{ env.PROD_REGION }}
+          role-to-assume: ${{ env.PROD_PIPELINE_EXECUTION_ROLE }}
+          role-session-name: prod-deployment
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      - name: Deploy to production account
+        run: |
+          sam deploy --stack-name ${PROD_STACK_NAME} \
+            --template packaged-prod.yaml \
+            --capabilities CAPABILITY_IAM \
+            --region ${PROD_REGION} \
+            --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
+            --no-fail-on-empty-changeset \
+            --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
+            --tags AppManagerCFNStackKey=${PROD_STACK_NAME} \
+            --parameter-overrides "UserPoolDomainPrefix=\"${USER_POOL_DOMAIN_PREFIX}\" ClientDomains=\"${CLIENT_DOMAINS}\" GoogleClientId=\"${GOOGLE_OAUTH_CLIENT_ID}\" GoogleClientSecret=\"${GOOGLE_OAUTH_CLIENT_SECRET}\" DomainName=\"${DOMAIN_NAME}\" HostedZoneId=\"${HOSTED_ZONE_ID}\" AcmCertificateArn\"${ACM_CERTIFICATE_ARN}\""
