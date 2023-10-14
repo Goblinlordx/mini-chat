@@ -4,10 +4,6 @@ on:
   push:
     branches:
       - 'main'
-      - 'feature**'
-  delete:
-    branches:
-      - 'feature**'
 
 env:
   SAM_TEMPLATE: template.yaml
@@ -27,14 +23,13 @@ env:
   PROD_REGION: ap-northeast-2
   # Custom parameters
   ## AuthN
-  USER_POOL_DOMAIN_PREFIX: ${{ secrets.USER_POOL_DOMAIN_PREFIX }}
-  CLIENT_DOMAINS: ${{ secrets.CLIENT_DOMAINS }}
+  USER_POOL_DOMAIN_PREFIX: ${{ env.USER_POOL_DOMAIN_PREFIX }}
   GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
   GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
   ## Hosting
-  DOMAIN_NAME: ${{ secrets.DOMAIN_NAME }}
-  HOSTED_ZONE_ID: ${{ secrets.HOSTED_ZONE_ID }}
-  ACM_CERTIFICATE_ARN: ${{ secrets.ACM_CERTIFICATE_ARN }}
+  DOMAIN_NAME: ${{ env.DOMAIN_NAME }}
+  HOSTED_ZONE_ID: ${{ env.HOSTED_ZONE_ID }}
+  ACM_CERTIFICATE_ARN: ${{ env.ACM_CERTIFICATE_ARN }}
 
 permissions:
   id-token: write
@@ -117,4 +112,4 @@ jobs:
             --no-fail-on-empty-changeset \
             --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
             --tags AppManagerCFNStackKey=${PROD_STACK_NAME} \
-            --parameter-overrides "UserPoolDomainPrefix=\"${USER_POOL_DOMAIN_PREFIX}\" ClientDomains=\"${CLIENT_DOMAINS}\" GoogleClientId=\"${GOOGLE_OAUTH_CLIENT_ID}\" GoogleClientSecret=\"${GOOGLE_OAUTH_CLIENT_SECRET}\" DomainName=\"${DOMAIN_NAME}\" HostedZoneId=\"${HOSTED_ZONE_ID}\" AcmCertificateArn\"${ACM_CERTIFICATE_ARN}\""
+            --parameter-overrides "UserPoolDomainPrefix=\"${USER_POOL_DOMAIN_PREFIX}\" GoogleClientId=\"${GOOGLE_OAUTH_CLIENT_ID}\" GoogleClientSecret=\"${GOOGLE_OAUTH_CLIENT_SECRET}\" DomainName=\"${DOMAIN_NAME}\" HostedZoneId=\"${HOSTED_ZONE_ID}\" AcmCertificateArn\"${ACM_CERTIFICATE_ARN}\""
