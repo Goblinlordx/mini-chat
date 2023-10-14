@@ -38,9 +38,6 @@ Parameters:
   PipelineExecutionRole:
     Type: String
     Description: "Pipeline execution role ARN"
-  RootStackName:
-    Type: String
-    Description: "Root stack name"
 
 Conditions:
   IsStaticMode: !Equals [!Ref RewriteMode, "STATIC"]
@@ -124,7 +121,9 @@ Resources:
         Statement:
         - Effect: Allow
           Action: ["s3:*"]
-          Resource: [!GetAtt Bucket.Arn]
+          Resource: 
+          - !GetAtt Bucket.Arn
+          - !Sub "${!GetAtt Bucket.Arn}/*"
         - Effect: Allow
           Action: ["cloudfront:*"]
           Resource: ["*"]
