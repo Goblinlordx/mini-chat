@@ -20,6 +20,14 @@ Parameters:
     Type: String
     Description: Google OAuth Client Secret
     Default: invalid
+  EmailDomainWhitelist:
+    Type: String
+    Description: Whitelist of allowed email domains
+    Default: ""
+  EmailWhitelist:
+    Type: String
+    Description: Whitelist of allowed emails
+    Default: ""
 
 Resources:
   UserPool:
@@ -78,6 +86,29 @@ Resources:
     Properties:
       Domain: !Sub ${UserPoolDomainPrefix}-${AWS::AccountId}
       UserPoolId: !Ref UserPool
+
+  PreSignUpLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/presignup
+      Handler: index.handler
+      Runtime: nodejs18.x
+      Environment:
+        Variables:
+          EMAIL_DOMAIN_WHITELIST: !Ref EmailDomainWhitelist
+          EMAIL_WHITELIST: !Ref EmailWhitelist
+      Events:
+        CognitoTrigger:
+          Type: Cognito
+          Properties:
+            Trigger: PreSignUp
+            UserPool: !Ref UserPool
+    Metadata:
+      BuildMethod: esbuild
+      Minify: true
+      Target: es2022
+      EntryPoints:
+      - index.ts
 
 Outputs:
   UserPoolId:

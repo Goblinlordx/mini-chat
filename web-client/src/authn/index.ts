@@ -10,8 +10,8 @@ export const LOGIN_URL = `${AUTH_URL}?client_id=${CLIENT_ID}&response_type=${RES
 export const STORAGE_KEY = "authn_data"
 
 const checkAuthn = () => {
-  const id_token = localStorage.getItem(STORAGE_KEY)
-  return Boolean(id_token)
+  const authnData = localStorage.getItem(STORAGE_KEY)
+  return Boolean(authnData)
 }
 
 const clearHash = () => {
@@ -34,7 +34,7 @@ export const useAuthn = () => {
 
   const { hash } = window.location
   if (hash) {
-    const { access_token, id_token, token_type, expires_in } =
+    const { access_token, id_token, token_type, expires_in, ...rest } =
       Object.fromEntries(
         hash
           .slice(1)
@@ -42,11 +42,13 @@ export const useAuthn = () => {
           .map((p) => p.split("="))
           .map(([k, v]) => [k, decodeURIComponent(v)])
       )
+    console.log(rest)
     if (access_token || id_token || token_type || expires_in) {
       if (access_token && id_token && token_type && expires_in) {
+        const authnData = { access_token, id_token, token_type, expires_in }
         localStorage.setItem(
           STORAGE_KEY,
-          JSON.stringify({ access_token, id_token, token_type, expires_in })
+          JSON.stringify(authnData)
         )
       }
       clearHash()

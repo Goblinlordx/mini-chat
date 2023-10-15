@@ -25,6 +25,14 @@ Parameters:
   PipelineExecutionRole:
     Type: String
     Description: "Pipeline execution role ARN"
+  EmailDomainWhitelist:
+    Type: String
+    Description: "Email domain whitelist"
+    Default: ""
+  EmailWhitelist:
+    Type: String
+    Description: "Email whitelist"
+    Default: ""
 
 Resources:
   AuthNService:
@@ -38,6 +46,8 @@ Resources:
         - domain: !GetAtt HostingService.Outputs.DistributionURL
         GoogleClientId: !Ref GoogleClientId
         GoogleClientSecret: !Ref GoogleClientSecret
+        EmailDomainWhitelist: !Ref EmailDomainWhitelist
+        EmailWhitelist: !Ref EmailWhitelist
   HostingService:
     Type: AWS::Serverless::Application
     Properties:
