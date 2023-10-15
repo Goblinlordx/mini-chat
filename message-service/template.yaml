@@ -65,3 +65,11 @@ Resources:
       Target: es2022
       EntryPoints:
       - index.ts
+
+  OnConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+        FunctionName: !GetAtt Lambda.Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !GetAtt MessageApi.Arn
