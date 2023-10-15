@@ -72,4 +72,4 @@ Resources:
         FunctionName: !GetAtt OnConnectFunction.Arn
         Action: lambda:InvokeFunction
         Principal: apigateway.amazonaws.com
-        SourceArn: !GetAtt MessageApi.Arn
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MessageApi.ApiId}/*"
