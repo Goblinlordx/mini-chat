@@ -43,9 +43,7 @@ Resources:
       ApiId: !Ref MessageApi
       Description: Connect Integration
       IntegrationType: AWS_PROXY
-      IntegrationUri:
-        Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectFunction.Arn}/invocations
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectFunction.Arn}/invocations"
 
   OnConnectFunction:
     Type: AWS::Serverless::Function
@@ -93,9 +91,7 @@ Resources:
       ApiId: !Ref MessageApi
       Description: Disconnect Integration
       IntegrationType: AWS_PROXY
-      IntegrationUri:
-        Fn::Sub:
-            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDisconnectFunction.Arn}/invocations
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDisconnectFunction.Arn}/invocations"
 
   OnDisconnectFunction:
     Type: AWS::Serverless::Function
@@ -120,6 +116,53 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
         FunctionName: !GetAtt OnDisconnectFunction.Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MessageApi.ApiId}/*"
+
+  MessageRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref MessageApi
+      RouteKey: message
+      AuthorizationType: NONE
+      OperationName: MessageRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref OnMessageInteg
+
+  MessageInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref MessageApi
+      Description: Message Integration
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnMessageFunction.Arn}/invocations"
+
+  OnMessageFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/onmessage
+      Handler: index.handler
+      Runtime: nodejs18.x
+      # Environment:
+      #   Variables:
+      #     TABLE_NAME: !Ref TableName
+      # Policies:
+      # - DynamoDBCrudPolicy:
+      #     TableName: !Ref TableName
+    Metadata:
+      BuildMethod: esbuild
+      Minify: true
+      Target: es2022
+      EntryPoints:
+      - index.ts
+
+  OnConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+        FunctionName: !GetAtt OnMessageFunction.Arn
         Action: lambda:InvokeFunction
         Principal: apigateway.amazonaws.com
         SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MessageApi.ApiId}/*"
