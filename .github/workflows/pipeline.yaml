@@ -137,20 +137,25 @@ jobs:
   build-client:
     needs: [deploy-prod-infra]
     runs-on: ubuntu-latest
+    env:
+      REACT_APP_AUTH_URL: ${{ needs.deploy-prod-infra.outputs.auth_url }}
+      REACT_APP_AUTH_CLIENT_ID: ${{ needs.deploy-prod-infra.outputs.auth_client_id }}
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    - working-directory: ./web-client
+    - name: Output test
+      run: echo "$REACT_APP_AUTH_URL $REACT_AUTH_CLIENT_ID"
+    - name: Pull dependencies
+      working-directory: ./web-client
       run: npm ci
-    - working-directory: ./web-client
-      env:
-        REACT_APP_AUTH_URL: ${{ needs.deploy-prod-infra.outputs.auth_url }}
-        REACT_APP_AUTH_CLIENT_ID: ${{ needs.deploy-prod-infra.outputs.auth_client_id }}
+    - name: Run build process
+      working-directory: ./web-client
       run: npm run build
-    - working-directory: ./web-client
+    - name: Run tests
+      working-directory: ./web-client
       run: npm test
     - uses: actions/upload-artifact@v3
       with:
