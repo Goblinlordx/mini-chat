@@ -8,7 +8,7 @@ Resources:
     Properties:
       Name: !Sub ${AWS::StackName}-api
       ProtocolType: WEBSOCKET
-      RouteSelectionExpression: "$request.body.action"
+      RouteSelectionExpression: $request.body.action
 
   ApiDeployment:
     Type: AWS::ApiGatewayV2::Deployment
@@ -42,7 +42,7 @@ Resources:
     Properties:
       ApiId: !Ref MessageApi
       Description: Connect Integration
-      IntegrationType: AWS
+      IntegrationType: AWS_PROXY
       IntegrationUri:
         Fn::Sub:
             arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectFunction.Arn}/invocations
@@ -92,7 +92,7 @@ Resources:
     Properties:
       ApiId: !Ref MessageApi
       Description: Disconnect Integration
-      IntegrationType: AWS
+      IntegrationType: AWS_PROXY
       IntegrationUri:
         Fn::Sub:
             arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDisconnectFunction.Arn}/invocations
