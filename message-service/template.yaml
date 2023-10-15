@@ -10,6 +10,21 @@ Resources:
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
 
+  ApiDeployment:
+    Type: AWS::ApiGatewayV2::Deployment
+    DependsOn:
+    - ConnectRoute
+    Properties:
+      ApiId: !Ref MessageApi
+
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      StageName: V1
+      Description: Version 1 'stage'
+      DeploymentId: !Ref ApiDeployment
+      ApiId: !Ref MessageApi
+
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
