@@ -157,14 +157,17 @@ jobs:
         role-duration-seconds: 3600
         role-skip-session-tagging: true
     - name: Get auth url
-      run: export REACT_APP_AUTH_URL=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='AuthUrl'].OutputValue" --no-paginate --output text)
+      run: export "AUTH_URL=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='AuthUrl'].OutputValue" --no-paginate --output text)" >> $GITHUB_ENV
     - name: Get auth client id
-      run: export REACT_APP_AUTH_CLIENT_ID=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='AuthClientId'].OutputValue" --no-paginate --output text)
+      run: export "AUTH_CLIENT_ID=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='AuthClientId'].OutputValue" --no-paginate --output text)" >> $GITHUB_ENV
     - name: Pull dependencies
       working-directory: ./web-client
       run: npm ci
     - name: Run build process
       working-directory: ./web-client
+      env:
+        REACT_APP_AUTH_URL: ${{ env.AUTH_URL }}
+        REACT_APP_AUTH_CLIENT_ID: ${{ env.AUTH_CLIENT_ID }}
       run: npm run build
     - name: Run tests
       working-directory: ./web-client
