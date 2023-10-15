@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { toast } from "react-toastify"
 
 const AUTH_URL = process.env.REACT_APP_AUTH_URL ?? ""
 const CLIENT_ID = process.env.REACT_APP_AUTH_CLIENT_ID ?? ""
@@ -32,28 +33,30 @@ export const useAuthn = () => {
     setAuthenticated(true)
   }, [])
 
-  const { hash } = window.location
-  if (hash) {
-    const { access_token, id_token, token_type, expires_in, ...rest } =
-      Object.fromEntries(
-        hash
-          .slice(1)
-          .split("&")
-          .map((p) => p.split("="))
-          .map(([k, v]) => [k, decodeURIComponent(v)])
-      )
-    console.log(rest)
-    if (access_token || id_token || token_type || expires_in) {
-      if (access_token && id_token && token_type && expires_in) {
-        const authnData = { access_token, id_token, token_type, expires_in }
-        localStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(authnData)
-        )
-      }
-      clearHash()
+  const { hash = "" } = window.location
+  const query = Object.fromEntries(
+    hash
+      .slice(1)
+      .split("&")
+      .map((p) => p.split("="))
+      .map(([k, v]) => [k, decodeURIComponent(v)])
+  )
+  const { access_token, id_token, token_type, expires_in, error_description } =
+    query
+
+  if (access_token || id_token || token_type || expires_in) {
+    if (access_token && id_token && token_type && expires_in) {
+      const authnData = { access_token, id_token, token_type, expires_in }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(authnData))
     }
+    clearHash()
   }
+
+  useEffect(() => {
+    if (!error_description) return
+    toast(decodeURIComponent(error_description).replace(/\+/g, " ").trim())
+    window.history.replaceState({}, "", "/")
+  }, [error_description])
 
   return [init, authenticated, logout] as const
 }

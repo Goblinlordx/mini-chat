@@ -1,5 +1,7 @@
 import React from "react"
 import "./App.css"
+import "react-toastify/dist/ReactToastify.css"
+import { ToastContainer } from "react-toastify"
 import { LOGIN_URL, useAuthn } from "./authn"
 
 function App() {
@@ -17,6 +19,17 @@ function App() {
           Login
         </a>
       )}
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </div>
   )
 }

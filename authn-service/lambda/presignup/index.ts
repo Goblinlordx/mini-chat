@@ -21,7 +21,7 @@ export const handler: PreSignUpTriggerHandler = async (event, context) => {
   const [_, domain] = email.split("@")
 
   if (RESTRICTED && !EMAIL_DOMAIN_WHITELIST.has(domain) && !EMAIL_WHITELIST.has(email)) {
-    throw new Error("must be authorized user to sign up")
+    throw new Error("must be authorized user to sign in")
   }
 
   return {}
