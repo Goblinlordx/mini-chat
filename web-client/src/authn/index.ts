@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 
-const AUTH_URL = process.env.REACT_APP_AUTH_URL
-const CLIENT_ID = process.env.REACT_APP_AUTH_CLIENT_ID
+const AUTH_URL = process.env.REACT_APP_AUTH_URL ?? ""
+const CLIENT_ID = process.env.REACT_APP_AUTH_CLIENT_ID ?? ""
 const RESPONSE_TYPE = "token"
 const { protocol, hostname, port } = window.location
 const REDIRECT_URI = `${protocol}//${hostname}${port ? ":" + port : ""}`
