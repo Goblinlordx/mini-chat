@@ -43,7 +43,7 @@ Resources:
       ApiId: !Ref MessageApi
       Description: Connect Integration
       IntegrationType: AWS
-      IntegrationUri: 
+      IntegrationUri:
         Fn::Sub:
             arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectFunction.Arn}/invocations
 
@@ -70,6 +70,56 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
         FunctionName: !GetAtt OnConnectFunction.Arn
+        Action: lambda:InvokeFunction
+        Principal: apigateway.amazonaws.com
+        SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MessageApi.ApiId}/*"
+
+
+  DisconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref MessageApi
+      RouteKey: $disconnect
+      AuthorizationType: NONE
+      OperationName: DisconnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref DisconnectInteg
+
+  DisconnectInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref MessageApi
+      Description: Disconnect Integration
+      IntegrationType: AWS
+      IntegrationUri:
+        Fn::Sub:
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnDisconnectFunction.Arn}/invocations
+
+  OnDisconnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/ondisconnect
+      Handler: index.handler
+      Runtime: nodejs18.x
+      # Environment:
+      #   Variables:
+      #     TABLE_NAME: !Ref TableName
+      # Policies:
+      # - DynamoDBCrudPolicy:
+      #     TableName: !Ref TableName
+    Metadata:
+      BuildMethod: esbuild
+      Minify: true
+      Target: es2022
+      EntryPoints:
+      - index.ts
+
+  OnConnectPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+        FunctionName: !GetAtt OnDisconnectFunction.Arn
         Action: lambda:InvokeFunction
         Principal: apigateway.amazonaws.com
         SourceArn: !Sub "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${MessageApi.ApiId}/*"

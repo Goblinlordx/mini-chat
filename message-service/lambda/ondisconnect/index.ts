@@ -5,10 +5,9 @@ export const handler: APIGatewayProxyWebsocketHandlerV2 = async (
   context
 ) => {
   console.log(JSON.stringify(event))
-  console.log(JSON.stringify(context))
 
   return {
     statusCode: 200,
-    body: "connected"
+    body: "disconnected"
   }
 }
