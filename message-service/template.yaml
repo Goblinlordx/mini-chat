@@ -116,7 +116,7 @@ Resources:
       EntryPoints:
       - index.ts
 
-  OnConnectPermission:
+  OnDisonnectPermission:
     Type: AWS::Lambda::Permission
     Properties:
         FunctionName: !GetAtt OnDisconnectFunction.Arn
