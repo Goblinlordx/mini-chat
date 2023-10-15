@@ -6,6 +6,7 @@ Resources:
   MessageApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
+      Name: !Sub ${AWS::StackName}-api
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
 
