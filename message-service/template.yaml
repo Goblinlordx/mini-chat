@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform:
+  - AWS::Serverless-2016-10-31
+
+Resources:
+  MessageApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      ProtocolType: WEBSOCKET
+      RouteSelectionExpression: "$request.body.action"
+
+  ConnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref MessageApi
+      RouteKey: $connect
+      AuthorizationType: NONE
+      OperationName: ConnectRoute
+      Target: !Join
+        - '/'
+        - - 'integrations'
+          - !Ref ConnectInteg
+
+  ConnectInteg:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref MessageApi
+      Description: Connect Integration
+      IntegrationType: AWS
+      IntegrationUri: 
+        Fn::Sub:
+            arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${OnConnectFunction.Arn}/invocations
+
+   OnConnectFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: lambda/
+      Handler: index.handler
+      Runtime: nodejs18.x
+      # Environment:
+      #   Variables:
+      #     TABLE_NAME: !Ref TableName
+      # Policies:
+      # - DynamoDBCrudPolicy:
+      #     TableName: !Ref TableName
