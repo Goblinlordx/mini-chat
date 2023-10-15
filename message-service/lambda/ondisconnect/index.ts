@@ -1,13 +1,12 @@
-import { APIGatewayProxyWebsocketHandlerV2 } from "aws-lambda"
+import {
+  APIGatewayEventWebsocketRequestContextV2,
+  APIGatewayProxyWebsocketEventV2,
+} from "aws-lambda"
 
-export const handler: APIGatewayProxyWebsocketHandlerV2 = async (
-  event,
-  context
+export const handler = async (
+  event: APIGatewayProxyWebsocketEventV2,
+  context: APIGatewayEventWebsocketRequestContextV2
 ) => {
   console.log(JSON.stringify(event))
-
-  return {
-    statusCode: 200,
-    body: "disconnected"
-  }
+  console.log(JSON.stringify(context))
 }

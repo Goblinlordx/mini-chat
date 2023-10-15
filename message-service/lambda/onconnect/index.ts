@@ -1,8 +1,11 @@
-import { APIGatewayAuthorizerEvent, APIGatewayEventRequestContext } from "aws-lambda"
+import {
+  APIGatewayEventWebsocketRequestContextV2,
+  APIGatewayProxyWebsocketEventV2,
+} from "aws-lambda"
 
 export const handler = async (
-  event: APIGatewayAuthorizerEvent,
-  context: APIGatewayEventRequestContext
+  event: APIGatewayProxyWebsocketEventV2,
+  context: APIGatewayEventWebsocketRequestContextV2
 ) => {
   console.log(JSON.stringify(event))
   console.log(JSON.stringify(context))
