@@ -14,6 +14,8 @@ Resources:
     Type: AWS::ApiGatewayV2::Deployment
     DependsOn:
     - ConnectRoute
+    - DisconnectRoute
+    - MessageRoute
     Properties:
       ApiId: !Ref MessageApi
 
@@ -130,7 +132,7 @@ Resources:
       Target: !Join
         - '/'
         - - 'integrations'
-          - !Ref OnMessageInteg
+          - !Ref MessageInteg
 
   MessageInteg:
     Type: AWS::ApiGatewayV2::Integration
@@ -159,7 +161,7 @@ Resources:
       EntryPoints:
       - index.ts
 
-  OnConnectPermission:
+  OnMessagePermission:
     Type: AWS::Lambda::Permission
     Properties:
         FunctionName: !GetAtt OnMessageFunction.Arn
