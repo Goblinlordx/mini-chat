@@ -69,7 +69,7 @@ Resources:
   OnConnectPermission:
     Type: AWS::Lambda::Permission
     Properties:
-        FunctionName: !GetAtt Lambda.Arn
+        FunctionName: !GetAtt OnConnectFunction.Arn
         Action: lambda:InvokeFunction
         Principal: apigateway.amazonaws.com
         SourceArn: !GetAtt MessageApi.Arn
