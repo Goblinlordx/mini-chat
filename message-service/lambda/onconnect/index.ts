@@ -1,14 +1,9 @@
-import { APIGatewayProxyWebsocketHandlerV2 } from "aws-lambda"
+import { APIGatewayAuthorizerEvent, APIGatewayEventRequestContext } from "aws-lambda"
 
-export const handler: APIGatewayProxyWebsocketHandlerV2 = async (
-  event,
-  context
+export const handler = async (
+  event: APIGatewayAuthorizerEvent,
+  context: APIGatewayEventRequestContext
 ) => {
   console.log(JSON.stringify(event))
   console.log(JSON.stringify(context))
-
-  return {
-    statusCode: 200,
-    body: "connected"
-  }
 }
