@@ -43,3 +43,9 @@ Resources:
       # Policies:
       # - DynamoDBCrudPolicy:
       #     TableName: !Ref TableName
+    Metadata:
+      BuildMethod: esbuild
+      Minify: true
+      Target: es2022
+      EntryPoints:
+      - index.ts

@@ -57,6 +57,10 @@ Resources:
         HostedZoneId: !Ref HostedZoneId
         AcmCertificateArn: !Ref AcmCertificateArn
         PipelineExecutionRole: !Ref PipelineExecutionRole
+  MessageService:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location: message-service/template.yaml
 
 Outputs:
   BucketName:
