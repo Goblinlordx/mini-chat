@@ -128,11 +128,13 @@ jobs:
       name: Get cloudformation distribution id from output
       run: echo "cfn_id=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='DistributionId'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
     - id: get-auth-url
-      name: Get cloudformation distribution id from output
+      name: Get auth url from output
       run: echo "auth_url=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='AuthUrl'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
     - id: get-auth-client-id
-      name: Get cloudformation distribution id from output
+      name: Get auth client id from output
       run: echo "auth_client_id=$(aws cloudformation describe-stacks --region ${{ env.PROD_REGION }} --stack-name ${{ env.PROD_STACK_NAME }} --query "Stacks[0].Outputs[?OutputKey=='AuthClientId'].OutputValue" --no-paginate --output text)" >> $GITHUB_OUTPUT
+    - run: echo "${{ steps.get-auth-url.outputs.auth_url }}"
+    - run: echo "${{ steps.get-auth-client-id.outputs.auth_client_id }}"
 
   build-client:
     needs: [deploy-prod-infra]
