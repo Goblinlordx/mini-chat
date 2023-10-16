@@ -24,5 +24,5 @@ export const handler: PreSignUpTriggerHandler = async (event, context) => {
     throw new Error("must be authorized user to sign in")
   }
 
-  return {}
+  return event
 }
